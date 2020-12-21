@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -30,19 +30,19 @@
 #include "common.h"
 
 extern FS_Archive ArchiveSD;
-extern FS_Archive ArchiveHomeExt;
-extern FS_Archive ArchiveThemeExt;
 
-Result open_archives(void);
-Result close_archives(void);
+// reads, can accept a preallocated buffer
+// in which case will only read up to capacity bytes (and set size accordingly)
+Result file_to_buf(FS_Path path, FS_Archive archive, Buffer_t* out_buf);
+Result zip_file_to_buf(const char *file_name, const u16 *zip_path, Buffer_t* out_buf);
+Result zip_memory_to_buf(const char *file_name, const Buffer_t* zip_buf, Buffer_t* out_buf);
 
-u32 file_to_buf(FS_Path path, FS_Archive archive, char** buf);
-u32 zip_memory_to_buf(char *file_name, void * zip_memory, size_t zip_size, char ** buf);
-u32 zip_file_to_buf(char *file_name, u16 *zip_path, char **buf);
-u32 decompress_lz_file(FS_Path file_name, FS_Archive archive, char **buf);
-u32 compress_lz_file_fast(FS_Path path, FS_Archive archive, char *in_buf, u32 size);
+// writes
+Result buf_to_file(FS_Path path, FS_Archive archive, const Buffer_t* in_file);
+Result remake_file(FS_Path path, FS_Archive archive, const u32 size);
 
-Result buf_to_file(u32 size, FS_Path path, FS_Archive archive, char *buf);
-void remake_file(FS_Path path, FS_Archive archive, u32 size);
+// utility
+Result decompress_lz_file(FS_Path file_name, FS_Archive archive, Buffer_t* out_buf);
+Result compress_lz_file_fast(FS_Path path, FS_Archive archive, const Buffer_t* in_file);
 
 #endif

@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -28,30 +28,7 @@
 #define REMOTE_H
 
 #include "common.h"
-#include "draw.h"
-#include <ctype.h>
 
-#define THEMEPLAZA_BASE_URL "https://themeplaza.eu"
-#define THEMEPLAZA_API_URL "/api/anemone/v1"
-#define THEMEPLAZA_BASE_API_URL THEMEPLAZA_BASE_URL  THEMEPLAZA_API_URL
-
-#define THEMEPLAZA_PAGE_FORMAT THEMEPLAZA_BASE_API_URL  "/list?page=%"  JSON_INTEGER_FORMAT  "&category=%i&query=%s"
-#define THEMEPLAZA_JSON_PAGE_COUNT   "pages"
-#define THEMEPLAZA_JSON_PAGE_IDS     "items"
-
-#define THEMEPLAZA_JSON_ERROR_MESSAGE             "message"
-#define THEMEPLAZA_JSON_ERROR_MESSAGE_NOT_FOUND   "No items found"
-
-
-#define THEMEPLAZA_DOWNLOAD_FORMAT   THEMEPLAZA_BASE_URL  "/download/%"  JSON_INTEGER_FORMAT
-#define THEMEPLAZA_PREVIEW_FORMAT    THEMEPLAZA_DOWNLOAD_FORMAT  "/preview"
-#define THEMEPLAZA_BGM_FORMAT        THEMEPLAZA_DOWNLOAD_FORMAT  "/bgm"
-#define THEMEPLAZA_ICON_FORMAT       THEMEPLAZA_DOWNLOAD_FORMAT  "/preview/icon"
-#define THEMEPLAZA_SMDH_FORMAT       THEMEPLAZA_DOWNLOAD_FORMAT  "/smdh"
-
-#define CACHE_PATH_FORMAT            "/3ds/"  APP_TITLE  "/cache/%"  JSON_INTEGER_FORMAT
-
-bool themeplaza_browser(EntryMode mode);
-u32 http_get(const char *url, char ** filename, char ** buf, InstallType install_type);
+Result http_get(const char *url, char ** out_filename, Buffer_t* out_buf, const char* loading_message);
 
 #endif

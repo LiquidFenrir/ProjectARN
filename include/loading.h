@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -28,24 +28,7 @@
 #define LOADING_H
 
 #include "common.h"
-#include "music.h"
 #include <jansson.h>
-
-enum ICON_IDS_OFFSET {
-    ICONS_ABOVE = 0,
-    ICONS_VISIBLE,
-    ICONS_UNDER,
-
-    ICONS_OFFSET_AMOUNT,
-};
-
-typedef enum {
-    SORT_NONE,
-
-    SORT_NAME,
-    SORT_AUTHOR,
-    SORT_PATH,
-} SortMode;
 
 typedef struct {
     u8 _padding1[4 + 2 + 2];
@@ -60,71 +43,92 @@ typedef struct {
     u16 big_icon[48*48];
 } Icon_s;
 
+enum EntrySpecial {
+    SPECIAL_NONE = 0,
+    SPECIAL_SHUFFLE = 1,
+    SPECIAL_SHUFFLE_NO_BGM = 2,
+};
+
+#define ENTRY_PATH_SIZE 0x106
+typedef struct {
+    u16 path[ENTRY_PATH_SIZE + 1];
+} Entry_Path_s;
+
 typedef struct {
     u16 name[0x41];
     u16 desc[0x81];
     u16 author[0x41];
 
-    // u32 placeholder_color;
-
-    u16 path[0x106];
     bool is_zip;
+    Entry_Path_s path;
+    int path_length;
 
-    bool in_shuffle;
-    bool no_bgm_shuffle;
-    bool installed;
+    int special;
 
-    json_int_t tp_download_id;
+    // json_int_t tp_download_id;
 } Entry_s;
 
-typedef struct {
-    Entry_s * entries;
-    int entries_count;
+enum SortTypes {
+    SORT_TITLE,
+    SORT_AUTHOR,
+    SORT_PATH,
 
-    C2D_Image ** icons;
+    SORTS_AMOUNT
+};
+typedef struct {
+    s8 type;
+    s8 direction;
+} Single_Sort_s;
+typedef struct {
+    Single_Sort_s infos[SORTS_AMOUNT];
+} Sort_Info_s;
+
+typedef struct {
+    Entry_s* entries;
+    int* entries_view;
+    int entries_count;
+    // used when adding/removing elements post load
+    // they arent removed from the entries array but only from the view
+    int entries_viewing_count;
+
+    const char* loading_path;
+    C2D_Image logo; // image from spritesheet
+
+    Tex3DS_SubTexture icons_subtexture;
+    C3D_Tex* icons;
+
+    int entries_per_screen;
 
     int previous_scroll;
     int scroll;
 
+    // in the entries_view array
     int previous_selected;
     int selected_entry;
 
-    int shuffle_count;
-
-    EntryMode mode;
-    int entries_per_screen_v;
-    int entries_per_screen_h;
-    int entries_loaded;
-    int entry_size;
-
-    SortMode current_sort;
-
-    json_int_t tp_current_page;
-    json_int_t tp_page_count;
-    char * tp_search;
+    Sort_Info_s previous_sort, sort;
 } Entry_List_s;
 
 typedef struct {
-    void ** thread_arg;
-    volatile bool run_thread;
-} Thread_Arg_s;
+    const char* loading_path;
+    int entries_per_screen;
+    Tex3DS_SubTexture icons_subtexture;
+    C2D_Image logo;
+} Entry_List_Params_s;
 
-C2D_Image * loadTextureIcon(Icon_s *icon);
-void parse_smdh(Icon_s *icon, Entry_s * entry, const u16 * fallback_name);
+void smdh_load_info(Entry_s* into, const Icon_s* from);
+void smdh_load_icon(u16* into, const Icon_s* from);
 
-void sort_by_name(Entry_List_s * list);
-void sort_by_author(Entry_List_s * list);
-void sort_by_filename(Entry_List_s * list);
+// after a download, only works for zips
+Result load_list_append_downloaded(const char* path, Entry_List_s* list);
+// on launch
+Result load_list_entries(const Entry_List_Params_s* params, Entry_List_s* list);
+Result load_entry_file(const char * filename, const Entry_s* entry, Buffer_t* output_buffer);
+// only for folder entries (used by the browser to save smdh, preview)
+Result save_entry_file(const char * filename, const Entry_s* entry, const Buffer_t* input_buffer);
 
-void delete_entry(Entry_s * entry, bool is_file);
-Result load_entries(const char * loading_path, Entry_List_s * list);
-bool load_preview_from_buffer(void * buf, u32 size, C2D_Image * preview_image, int * preview_offset);
-bool load_preview(Entry_List_s list, C2D_Image * preview_image, int * preview_offset);
-void free_preview(C2D_Image preview_image);
-Result load_audio(Entry_s, audio_s *);
-void load_icons_first(Entry_List_s * current_list, bool silent);
-void handle_scrolling(Entry_List_s * list);
-void load_icons_thread(void * void_arg);
-u32 load_data(char * filename, Entry_s entry, char ** buf);
+void icons_loading_thread_func(void * arg);
+
+void list_apply_sort(Entry_List_s* list);
 
 #endif

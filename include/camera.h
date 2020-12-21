@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -28,26 +28,8 @@
 #define CAMERA_H
 
 #include "common.h"
+#include "application.h"
 
-typedef struct {
-    u16* camera_buffer;
-
-    Handle event_stop;
-    Thread cam_thread, ui_thread;
-
-    LightEvent event_cam_info, event_ui_info;
-
-    CondVar cond;
-    LightLock mut;
-    u32 num_readers_active;
-    bool writer_waiting;
-    bool writer_active;
-
-    bool any_update;
-
-    struct quirc* context;
-} qr_data;
-
-bool init_qr(void);
+void qr_scanner(Application_t* app);
 
 #endif

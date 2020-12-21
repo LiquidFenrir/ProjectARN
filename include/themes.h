@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -32,12 +32,6 @@
 
 #define MAX_SHUFFLE_THEMES 10
 
-enum ThemeInstall {
-    THEME_INSTALL_SHUFFLE = BIT(0),
-    THEME_INSTALL_BODY = BIT(1),
-    THEME_INSTALL_BGM = BIT(2),
-};
-
 typedef struct {
     u32 index;
     u8 dlc_tid_low_bits;
@@ -50,7 +44,7 @@ typedef struct {
     ThemeEntry_s theme_entry;
     ThemeEntry_s shuffle_themes[MAX_SHUFFLE_THEMES];
     u8 _padding2[0xb];
-    bool shuffle;
+    u8 shuffle;
 } SaveData_dat_s;
 
 typedef struct {
@@ -68,13 +62,5 @@ typedef struct {
     u32 shuffle_body_sizes[MAX_SHUFFLE_THEMES];
     u32 shuffle_music_sizes[MAX_SHUFFLE_THEMES];
 } ThemeManage_bin_s;
-
-Result theme_install(Entry_s theme);
-Result no_bgm_install(Entry_s theme);
-Result bgm_install(Entry_s theme);
-
-Result shuffle_install(Entry_List_s themes);
-
-void themes_check_installed(void * void_arg);
 
 #endif

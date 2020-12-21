@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -28,11 +28,5 @@
 #define SPLASHES_H
 
 #include "common.h"
-#include "loading.h"
-
-void splash_delete(void);
-void splash_install(Entry_s splash);
-
-void splash_check_installed(void * void_arg);
 
 #endif

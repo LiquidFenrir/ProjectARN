@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -26,15 +26,15 @@
 
 #include "colors.h"
 
-Color colors[COLOR_AMOUNT] = {0};
-
-void init_colors(void)
+Colors_Holder_s colors_default(void)
 {
-    colors[COLOR_BACKGROUND] = C2D_Color32(35, 28, 32, 255); //silver-y black
-    colors[COLOR_ACCENT] = C2D_Color32(12, 58, 111, 255);
-    colors[COLOR_WHITE] = C2D_Color32(255, 255, 255, 255);
-    colors[COLOR_CURSOR] = C2D_Color32(200, 200, 200, 255);
-    colors[COLOR_BLACK] = C2D_Color32(0, 0, 0, 255);
-    colors[COLOR_RED] = C2D_Color32(229, 66, 66, 255);
-    colors[COLOR_YELLOW] = C2D_Color32(239, 220, 11, 255);
+    Colors_Holder_s out;
+    out.background = C2D_Color32(35, 28, 32, 255); //silver-y black
+    out.foreground = C2D_Color32(200, 200, 200, 255);
+    out.accent = C2D_Color32(12, 58, 111, 255);
+    out.warning = C2D_Color32(239, 220, 11, 255);
+    out.error = C2D_Color32(229, 66, 66, 255);
+    out.black = C2D_Color32(0, 0, 0, 255);
+    out.white = C2D_Color32(255, 255, 255, 255);
+    return out;
 }

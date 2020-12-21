@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -31,19 +31,13 @@
 
 typedef u32 Color;
 
-typedef enum {
-    COLOR_BACKGROUND, //silver-y black
-    COLOR_ACCENT,
-    COLOR_WHITE,
-    COLOR_CURSOR,
-    COLOR_BLACK,
-    COLOR_RED,
-    COLOR_YELLOW,
+typedef struct {
+    Color background, foreground;
+    Color accent;
+    Color warning, error;
+    Color white, black;
+} Colors_Holder_s;
 
-    COLOR_AMOUNT,
-} Colors_e;
-
-extern Color colors[COLOR_AMOUNT];
-void init_colors(void);
+Colors_Holder_s colors_default(void);
 
 #endif

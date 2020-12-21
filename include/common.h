@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -42,20 +42,16 @@
         POS(); \
         DEBUG(__VA_ARGS__)
 
-#define FASTSCROLL_WAIT 1e8
+typedef struct {
+    char* data;
+    // byte count
+    u32 size;
+    u32 capacity;
+} Buffer_t;
 
-typedef enum {
-    MODE_THEMES = 0,
-    MODE_SPLASHES,
-
-    MODE_AMOUNT,
-} EntryMode;
-
-extern const char * main_paths[MODE_AMOUNT];
-extern const int entries_per_screen_v[MODE_AMOUNT];
-extern const int entries_per_screen_h[MODE_AMOUNT];
-extern const int entry_size[MODE_AMOUNT];
-extern bool quit;
-extern bool dspfirm;
+Buffer_t empty_buffer(void);
+Buffer_t sized_buffer(const u32 size);
+void free_buffer(Buffer_t* buf);
+void clear_buffer(Buffer_t* buf);
 
 #endif

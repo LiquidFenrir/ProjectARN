@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -35,6 +35,25 @@
 
 #include <archive.h>
 #include <archive_entry.h>
+
+typedef struct {
+    u16* camera_buffer;
+
+    Handle event_stop;
+    Thread cam_thread, ui_thread;
+
+    LightEvent event_cam_info, event_ui_info;
+
+    CondVar cond;
+    LightLock mut;
+    u32 num_readers_active;
+    bool writer_waiting;
+    bool writer_active;
+
+    bool any_update;
+
+    struct quirc* context;
+} qr_data;
 
 static void start_read(qr_data *data)
 {
@@ -179,8 +198,6 @@ static void update_ui(void *arg)
 
     while(svcWaitSynchronization(data->event_stop, 2 * 1000 * 1000ULL) == 0x09401BFE) // timeout of 2ms occured, still have 14 for copy and render
     {
-        draw_base_interface();
-
         // Untiled texture loading code adapted from FBI
         start_read(data);
         if(data->any_update)
@@ -197,10 +214,21 @@ static void update_ui(void *arg)
         }
         stop_read(data);
 
+        start_frame();
+
+        draw_base_interface();
+
         C2D_DrawImageAt((C2D_Image){ &tex, &subt3x }, 0.0f, 0.0f, 0.4f, NULL, 1.0f, 1.0f);
 
-        set_screen(bottom);
-        draw_text_center(GFX_BOTTOM, 4, 0.5, 0.5, 0.5, colors[COLOR_WHITE], "Press \uE005 To Quit");
+        set_screen(render_info->bottom_screen);
+
+        C2D_Text exit_text;
+        C2D_TextParse(&exit_text, render_info->dynamic_text, "Press any key to close the scanner");
+        float height = 0.0f;
+        C2D_TextGetDimensions(&exit_text, 0.5f, 0.5f, NULL, &height);
+
+        C2D_DrawText(&exit_text, C2D_WithColor | C2D_AlignCenter, 0.0f, (240.0f - height)/2.0f, 0.0f, 0.5f, 0.5f, render_info->colors.foreground);
+    
         end_frame();
     }
 
@@ -210,14 +238,14 @@ static void update_ui(void *arg)
 
 static bool start_capture_cam(qr_data *data) 
 {
-    if((data->cam_thread = threadCreate(capture_cam_thread, data, 0x10000, 0x1A, 1, false)) == NULL)
+    if((data->cam_thread = threadCreate(capture_cam_thread, data, 0x1000, 0x1A, 1, false)) == NULL)
     {
         throw_error("Capture cam thread creation failed\nPlease report this to the developers", ERROR_LEVEL_ERROR);
         LightEvent_Signal(&data->event_cam_info);
         LightEvent_Signal(&data->event_ui_info);
         return false;
     }
-    if((data->ui_thread = threadCreate(update_ui, data, 0x10000, 0x1A, 1, false)) == NULL)
+    if((data->ui_thread = threadCreate(update_ui, data, 0x1000, 0x1A, 1, false)) == NULL)
     {
         LightEvent_Signal(&data->event_ui_info);
         return false;
@@ -300,7 +328,7 @@ static void exit_qr(qr_data *data)
     data->event_stop = 0;
 }
 
-bool init_qr(void)
+void qr_scanner(Application_t* app)
 {
     qr_data data;
 
@@ -315,10 +343,7 @@ bool init_qr(void)
     while(!finished)
     {
         hidScanInput();
-        if (hidKeysDown() & (KEY_R | KEY_B | KEY_TOUCH))
-        {
-            break;
-        }
+        if (hidKeysDown()) break;
 
         finished = update_qr(&data, scan_data);
         svcSleepThread(50 * 1000 * 1000ULL); // only scan every 50ms
@@ -326,89 +351,84 @@ bool init_qr(void)
 
     exit_qr(&data);
 
-    bool success = false;
     if(finished && ready)
     {
-        draw_install(INSTALL_DOWNLOAD);
-        char * zip_buf = NULL;
+        Buffer_t zip_buf = empty_buffer();
         char * filename = NULL;
-        u32 zip_size = http_get((char*)scan_data->payload, &filename, &zip_buf, INSTALL_DOWNLOAD);
+        Result res = http_get((const char*)scan_data->payload, &filename, &zip_buf, "Downloading...");
 
-        if(zip_size != 0)
+        if(res == 0 && zip_buf.size != 0)
         {
-            draw_install(INSTALL_CHECKING_DOWNLOAD);
+            draw_loading("Checking downloaded zip...");
 
             struct archive *a = archive_read_new();
             archive_read_support_format_zip(a);
 
-            int r = archive_read_open_memory(a, zip_buf, zip_size);
-            archive_read_free(a);
+            int r = archive_read_open_memory(a, zip_buf.data, zip_buf.size);
 
             if(r == ARCHIVE_OK)
             {
-                EntryMode mode = MODE_AMOUNT;
-
-                char * buf = NULL;
-                do {
-                    if(zip_memory_to_buf("body_LZ.bin", zip_buf, zip_size, &buf) != 0)
+                AppplicationMode mode = MODES_AMOUNT;
+                struct archive_entry *entry;
+                while(archive_read_next_header(a, &entry) == ARCHIVE_OK)
+                {
+                    const char* name = archive_entry_pathname(entry);
+                    if(!strcasecmp(name, "body_LZ.bin"))
                     {
                         mode = MODE_THEMES;
                         break;
                     }
-
-                    free(buf);
-                    buf = NULL;
-                    if(zip_memory_to_buf("splash.bin", zip_buf, zip_size, &buf) != 0)
+                    else if(!strcasecmp(name, "splash.bin"))
                     {
                         mode = MODE_SPLASHES;
                         break;
                     }
-
-                    free(buf);
-                    buf = NULL;
-                    if(zip_memory_to_buf("splashbottom.bin", zip_buf, zip_size, &buf) != 0)
+                    else if(!strcasecmp(name, "splashbottom.bin"))
                     {
                         mode = MODE_SPLASHES;
                         break;
                     }
                 }
-                while(false);
 
-                free(buf);
-                buf = NULL;
-
-                if(mode != MODE_AMOUNT)
+                if(mode != MODES_AMOUNT)
                 {
-                    char path_to_file[0x107] = {0};
-                    sprintf(path_to_file, "%s%s", main_paths[mode], filename);
+                    char* path_to_file = calloc(1, ENTRY_PATH_SIZE + 1);
+                    const int len = sprintf(path_to_file, "%s%s", app->lists[mode].loading_path, filename);
                     char * extension = strrchr(path_to_file, '.');
                     if (extension == NULL || strcmp(extension, ".zip"))
-                        strcat(path_to_file, ".zip");
+                    {
+                        strcat(path_to_file + len, ".zip");
+                    }
 
-                    remake_file(fsMakePath(PATH_ASCII, path_to_file), ArchiveSD, zip_size);
-                    buf_to_file(zip_size, fsMakePath(PATH_ASCII, path_to_file), ArchiveSD, zip_buf);
-                    success = true;
+                    FS_Path zip_path = fsMakePath(PATH_ASCII, path_to_file);
+                    remake_file(zip_path, ArchiveSD, zip_buf.size);
+                    buf_to_file(zip_path, ArchiveSD, &zip_buf);
+
+                    // TODO: Queue entry addition work atom (waited on)
+                    // for now:
+                    free(path_to_file);
                 }
                 else
                 {
-                    throw_error("Zip downloaded is neither\na splash nor a theme.", ERROR_LEVEL_WARNING);
+                    throw_error("ZIP downloaded is neither\na splash nor a theme.", ERROR_LEVEL_WARNING);
                 }
             }
             else
             {
-                throw_error("File downloaded isn't a zip.", ERROR_LEVEL_WARNING);
+                throw_error("File downloaded isn't a ZIP.", ERROR_LEVEL_WARNING);
             }
-            free(zip_buf);
+
+            archive_read_free(a);
         }
         else
         {
             throw_error("Download failed.", ERROR_LEVEL_WARNING);
         }
 
+        free_buffer(&zip_buf);
         free(filename);
     }
 
     free(scan_data);
     quirc_destroy(data.context);
-    return success;
 }

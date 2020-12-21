@@ -1,6 +1,6 @@
 /*
 *   This file is part of Anemone3DS
-*   Copyright (C) 2016-2018 Contributors in CONTRIBUTORS.md
+*   Copyright (C) 2016-Present Contributors in CONTRIBUTORS.md
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -24,31 +24,27 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef MUSIC_H
-#define MUSIC_H
+#ifndef PREVIEW_H
+#define PREVIEW_H
 
 #include "common.h"
-#include "fs.h"
-#include "unicode.h"
-
-#include <tremor/ivorbisfile.h>
-#include <tremor/ivorbiscodec.h>
-
-#define BUF_TO_READ 40960 // How much data should be buffered at a time
+#include "loading.h"
 
 typedef struct {
-    OggVorbis_File vf;
-    ndspWaveBuf wave_buf[2];
-    float mix[12];
-    u8 buf_pos;
-    long data_read;
-    char *filebuf;
-    u32 filesize;
-    
-    volatile bool stop;
-    Handle finished;
-} audio_s;
+    Tex3DS_SubTexture top_subtex, bottom_subtex;
+    C3D_Tex underlying;
+    Entry_Path_s loaded_path; // check if the preview we're attempting to load is already loaded
 
-void play_audio(audio_s *);
+    bool* have_audio;
+
+    Thread audio_thread;
+    LightEvent event_start, event_done, event_stop_playback;
+    Buffer_t data; // takes ownership
+} Preview_Info_s;
+
+Result preview_load_from_buffer(const Buffer_t* png, Buffer_t* audio, Preview_Info_s* preview);
+Result preview_load_from_entry(const Entry_List_s* list, Preview_Info_s* preview);
+void preview_stop_music_playback(Preview_Info_s* preview);
+void preview_stop_music_thread(Preview_Info_s* preview);
 
 #endif
