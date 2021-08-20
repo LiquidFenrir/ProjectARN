@@ -133,6 +133,13 @@ static int compare_entries_by_filename(const void * a, const void * b)
 
     return memcmp(entry_a->path, entry_b->path, 0x106*sizeof(u16));
 }
+static int compare_entries_by_date(const void * a, const void * b)
+{
+    Entry_s *entry_a = (Entry_s *)a;
+    Entry_s *entry_b = (Entry_s *)b;
+
+    return entry_a->file_mtime - entry_b->file_mtime;
+}
 
 static void sort_list(Entry_List_s * list, sort_comparator compare_entries)
 {
@@ -154,6 +161,11 @@ void sort_by_filename(Entry_List_s * list)
 {
     sort_list(list, compare_entries_by_filename);
     list->current_sort = SORT_PATH;
+}
+void sort_by_date(Entry_List_s * list)
+{
+    sort_list(list, compare_entries_by_date);
+    list->current_sort = SORT_DATE;
 }
 
 Result load_entries(const char * loading_path, Entry_List_s * list)
@@ -215,6 +227,10 @@ Result load_entries(const char * loading_path, Entry_List_s * list)
 
         memcpy(current_entry->path, path, 0x106 * sizeof(u16));
         current_entry->is_zip = !strcmp(dir_entry.shortExt, "ZIP");
+
+        FSUSER_ControlArchive(ArchiveSD, ARCHIVE_ACTION_GET_TIMESTAMP,
+                             path, strulen(path, 0x106),
+                             &current_entry->file_mtime, sizeof(u64));
     }
 
     FSDIR_Close(dir_handle);

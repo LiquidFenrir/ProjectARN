@@ -676,6 +676,12 @@ int main(void)
                         sort_by_author(current_list);
                         load_icons_first(current_list, false);
                     }
+                    else if(((kDown | kHeld)) & KEY_DRIGHT)
+                    {
+                        sort_date:
+                        sort_by_date(current_list);
+                        load_icons_first(current_list, false);
+                    }
                 }
             }
             continue;
@@ -813,6 +819,9 @@ int main(void)
                                 goto sort_path;
                                 break;
                             case SORT_PATH:
+                                goto sort_date;
+                                break;
+                            case SORT_DATE:
                                 goto sort_name;
                                 break;
                             default:

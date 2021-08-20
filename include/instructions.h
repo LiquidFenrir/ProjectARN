@@ -107,7 +107,7 @@ Instructions_s extra_instructions[3] = {
             },
             {
                 "\uE07B Sort by filename",
-                NULL
+                "\uE07C Sort by date"
             },
             {
                 NULL,

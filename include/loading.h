@@ -45,6 +45,7 @@ typedef enum {
     SORT_NAME,
     SORT_AUTHOR,
     SORT_PATH,
+    SORT_DATE,
 } SortMode;
 
 typedef struct {
@@ -75,6 +76,7 @@ typedef struct {
     bool installed;
 
     json_int_t tp_download_id;
+    u64 file_mtime;
 } Entry_s;
 
 typedef struct {
@@ -115,6 +117,7 @@ void parse_smdh(Icon_s *icon, Entry_s * entry, const u16 * fallback_name);
 void sort_by_name(Entry_List_s * list);
 void sort_by_author(Entry_List_s * list);
 void sort_by_filename(Entry_List_s * list);
+void sort_by_date(Entry_List_s * list);
 
 void delete_entry(Entry_s * entry, bool is_file);
 Result load_entries(const char * loading_path, Entry_List_s * list);
