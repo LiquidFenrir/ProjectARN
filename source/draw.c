@@ -563,7 +563,7 @@ void draw_grid_interface(Entry_List_s * list, Instructions_s instructions, int e
     draw_instructions(instructions);
 
     const int selected_entry = list->selected_entry;
-    const Entry_s * current_entry = &list->entries[selected_entry];
+    const Entry_s * current_entry = list_get_selected_entry(list);
     draw_entry_info(current_entry);
 
     set_screen(bottom);
@@ -589,7 +589,7 @@ void draw_grid_interface(Entry_List_s * list, Instructions_s instructions, int e
     {
         if(i >= list->entries_count) break;
 
-        current_entry = &list->entries[i];
+        current_entry = list_get_entry(list, i);
 
         char name[0x41] = {0};
         utf16_to_utf8((u8 *)name, current_entry->name, 0x40);
@@ -701,7 +701,7 @@ void draw_interface(Entry_List_s * list, Instructions_s instructions, DrawMode d
     draw_instructions(instructions);
 
     const int selected_entry = list->selected_entry;
-    const Entry_s * current_entry = &list->entries[selected_entry];
+    const Entry_s * current_entry = list_get_selected_entry(list);
     draw_entry_info(current_entry);
 
     set_screen(bottom);
@@ -757,7 +757,7 @@ void draw_interface(Entry_List_s * list, Instructions_s instructions, DrawMode d
     {
         if(i >= list->entries_count) break;
 
-        current_entry = &list->entries[i];
+        current_entry = list_get_entry(list, i);
 
         char name[0x41] = {0};
         utf16_to_utf8((u8 *)name, current_entry->name, 0x40);

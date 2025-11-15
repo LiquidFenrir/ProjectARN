@@ -112,7 +112,7 @@ void load_icons_first(Entry_List_s * list, bool silent)
         if(offset >= list->entries_count)
             offset -= list->entries_count;
 
-        Entry_s * const current_entry = &list->entries[offset];
+        Entry_s * const current_entry = list_get_entry(list, offset);
         Icon_s * const smdh = load_entry_icon(current_entry);
         if(smdh != NULL)
         {
@@ -250,7 +250,7 @@ static bool load_icons(Entry_List_s * current_list, Handle mutex)
         if(offset >= current_list->entries_count)
             offset -= current_list->entries_count;
 
-        entries[ctr] = &current_list->entries[offset];
+        entries[ctr] = list_get_entry(current_list, offset);
         indexes[ctr] = index;
     }
 
@@ -351,7 +351,7 @@ bool load_preview(const Entry_List_s * list, C2D_Image * preview_image, int * pr
 {
     if(list->entries == NULL) return false;
 
-    const Entry_s * entry = &list->entries[list->selected_entry];
+    const Entry_s * entry = list_get_selected_entry(list);
 
     if(!memcmp(&previous_path_preview, &entry->path, 0x106 * sizeof(u16))) return true;
 

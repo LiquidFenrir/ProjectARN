@@ -103,7 +103,7 @@ void splash_check_installed(void * void_arg)
 
     for(int i = 0; i < list->entries_count && arg->run_thread; i++)
     {
-        Entry_s * splash = &list->entries[i];
+        Entry_s * splash = list_get_entry(list, i);
         top_size = load_data("/splash.bin", splash, &top_buf);
         bottom_size = load_data("/splashbottom.bin", splash, &bottom_buf);
 

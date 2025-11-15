@@ -358,7 +358,7 @@ static void change_selected(Entry_List_s * list, int change_value)
 
 static void toggle_shuffle(Entry_List_s * list)
 {
-    Entry_s * current_entry = &list->entries[list->selected_entry];
+    Entry_s * current_entry = list_get_selected_entry(list);
     if(current_entry->in_shuffle)
     {
         if(current_entry->no_bgm_shuffle)
@@ -581,7 +581,7 @@ int main(void)
                         if(current_mode == MODE_THEMES && dspfirm)
                         {
                             audio = calloc(1, sizeof(audio_s));
-                            Result r = load_audio(&current_list->entries[current_list->selected_entry], audio);
+                            Result r = load_audio(list_get_selected_entry(current_list), audio);
                             if (R_SUCCEEDED(r)) play_audio(audio);
                             else audio = NULL;
                         }
@@ -608,8 +608,7 @@ int main(void)
             }
         }
 
-        int selected_entry = current_list->selected_entry;
-        Entry_s * current_entry = &current_list->entries[selected_entry];
+        Entry_s * current_entry = list_get_selected_entry(current_list);
 
         if(preview_mode || current_list->entries == NULL)
             goto touch;
@@ -665,7 +664,7 @@ int main(void)
                 {
                     for(int i = 0; i < current_list->entries_count; i++)
                     {
-                        Entry_s * theme = &current_list->entries[i];
+                        Entry_s * theme = list_get_entry(current_list, i);
                         if(theme == current_entry)
                             theme->installed = true;
                         else
@@ -685,7 +684,7 @@ int main(void)
                 {
                     for(int i = 0; i < current_list->entries_count; i++)
                     {
-                        Entry_s * theme = &current_list->entries[i];
+                        Entry_s * theme = list_get_entry(current_list, i);
                         if(theme == current_entry)
                             theme->installed = true;
                         else
@@ -705,7 +704,7 @@ int main(void)
                 {
                     for(int i = 0; i < current_list->entries_count; i++)
                     {
-                        Entry_s * theme = &current_list->entries[i];
+                        Entry_s * theme = list_get_entry(current_list, i);
                         if(theme == current_entry)
                             theme->installed = true;
                         else
@@ -737,7 +736,7 @@ int main(void)
                     {
                         for(int i = 0; i < current_list->entries_count; i++)
                         {
-                            Entry_s * theme = &current_list->entries[i];
+                            Entry_s * theme = list_get_entry(current_list, i);
                             if(theme->in_shuffle)
                             {
                                 theme->in_shuffle = false;
@@ -939,7 +938,7 @@ int main(void)
                     splash_install(current_entry);
                     for(int i = 0; i < current_list->entries_count; i++)
                     {
-                        Entry_s * splash = &current_list->entries[i];
+                        Entry_s * splash = list_get_entry(current_list, i);
                         if(splash == current_entry)
                             splash->installed = true;
                         else
@@ -1066,7 +1065,7 @@ int main(void)
                             splash_install(current_entry);
                             for(int i = 0; i < current_list->entries_count; i++)
                             {
-                                Entry_s * splash = &current_list->entries[i];
+                                Entry_s * splash = list_get_entry(current_list, i);
                                 if(splash == current_entry)
                                     splash->installed = true;
                                 else

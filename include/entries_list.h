@@ -103,4 +103,7 @@ void list_init_capacity(Entry_List_s * list, const int init_capacity);
 // assumes list has been inited with a non zero capacity
 ssize_t list_add_entry(Entry_List_s * list);
 
+Entry_s * list_get_entry(Entry_List_s * list, int index);
+Entry_s * list_get_selected_entry(Entry_List_s * list);
+
 #endif

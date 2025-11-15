@@ -72,7 +72,7 @@ static Result install_theme_internal(const Entry_List_s * themes, int installmod
 
         for(int i = 0; i < themes->entries_count; i++)
         {
-            const Entry_s * current_theme = &themes->entries[i];
+            const Entry_s * current_theme = list_get_entry(themes, i);
 
             if(current_theme->in_shuffle)
             {
@@ -174,7 +174,7 @@ static Result install_theme_internal(const Entry_List_s * themes, int installmod
     }
     else
     {
-        const Entry_s * current_theme = &themes->entries[themes->selected_entry];
+        const Entry_s * current_theme = list_get_selected_entry(themes);
 
         if(installmode & THEME_INSTALL_BODY)
         {
@@ -739,7 +739,7 @@ void themes_check_installed(void * void_arg)
     int total_installed = 0;
     for(int i = 0; i < list->entries_count && total_installed < MAX_SHUFFLE_THEMES && arg->run_thread; i++)
     {
-        Entry_s * theme = &list->entries[i];
+        Entry_s * theme = list_get_entry(list, i);
         char * theme_body = NULL;
         u32 theme_body_size = load_data("/body_LZ.bin", theme, &theme_body);
         if(!theme_body_size) return;

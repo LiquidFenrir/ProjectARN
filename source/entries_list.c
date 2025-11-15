@@ -229,3 +229,12 @@ ssize_t list_add_entry(Entry_List_s * list)
 
     return list->entries_count++;
 }
+
+Entry_s * list_get_entry(Entry_List_s * list, int index)
+{
+    return &list->entries[index];
+}
+Entry_s * list_get_selected_entry(Entry_List_s * list)
+{
+    return list_get_entry(list, list->selected_entry);
+}

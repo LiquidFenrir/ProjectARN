@@ -153,7 +153,7 @@ static void load_remote_entries(Entry_List_s * list, json_t * ids_array, bool ig
     json_array_foreach(ids_array, i, id)
     {
         draw_loading_bar(i, list->entries_count, type);
-        Entry_s * current_entry = &list->entries[i];
+        Entry_s * current_entry = list_get_entry(list, i);
         current_entry->tp_download_id = json_integer_value(id);
 
         char * entry_path = NULL;
@@ -615,8 +615,7 @@ bool themeplaza_browser(RemoteMode mode)
             continue;
         }
 
-        int selected_entry = current_list->selected_entry;
-        Entry_s * current_entry = &current_list->entries[selected_entry];
+        Entry_s * current_entry = list_get_selected_entry(current_list);
 
         if (kDown & KEY_Y)
         {
