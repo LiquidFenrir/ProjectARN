@@ -36,6 +36,8 @@
 #include "badges.h"
 #include <time.h>
 
+#define BETWEEN(min, x, max) (min < x && x < max)
+
 bool quit = false;
 bool dspfirm = false;
 static audio_s * audio = NULL;
@@ -663,7 +665,6 @@ int main(void)
                 {
                     for(int i = 0; i < current_list->entries_count; i++)
                     {
-            #define BETWEEN(min, x, max) (min < x && x < max)
                         Entry_s * theme = &current_list->entries[i];
                         if(theme == current_entry)
                             theme->installed = true;
@@ -683,7 +684,6 @@ int main(void)
                 if(R_SUCCEEDED(theme_install(current_entry)))
                 {
                     for(int i = 0; i < current_list->entries_count; i++)
-
                     {
                         Entry_s * theme = &current_list->entries[i];
                         if(theme == current_entry)
