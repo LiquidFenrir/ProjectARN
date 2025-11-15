@@ -62,3 +62,5 @@ romfs/
 
 # Sublime stuff
 .clang_complete
+# Visual Studio Code stuff
+.vscode/
