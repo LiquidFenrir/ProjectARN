@@ -529,7 +529,7 @@ void draw_text_wrap_scaled(float x, float y, float z, Color color, const char * 
     }
 }
 
-static void draw_entry_info(Entry_s * entry)
+static void draw_entry_info(const Entry_s * entry)
 {
     char author[0x41] = {0};
     utf16_to_utf8((u8 *)author, entry->author, 0x40);
@@ -562,8 +562,8 @@ void draw_grid_interface(Entry_List_s * list, Instructions_s instructions, int e
 
     draw_instructions(instructions);
 
-    int selected_entry = list->selected_entry;
-    Entry_s * current_entry = &list->entries[selected_entry];
+    const int selected_entry = list->selected_entry;
+    const Entry_s * current_entry = &list->entries[selected_entry];
     draw_entry_info(current_entry);
 
     set_screen(bottom);
@@ -700,8 +700,8 @@ void draw_interface(Entry_List_s * list, Instructions_s instructions, DrawMode d
 
     draw_instructions(instructions);
 
-    int selected_entry = list->selected_entry;
-    Entry_s * current_entry = &list->entries[selected_entry];
+    const int selected_entry = list->selected_entry;
+    const Entry_s * current_entry = &list->entries[selected_entry];
     draw_entry_info(current_entry);
 
     set_screen(bottom);
