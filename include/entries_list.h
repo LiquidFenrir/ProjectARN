@@ -30,6 +30,8 @@
 #include "common.h"
 #include <jansson.h>
 
+struct Entry_List;
+
 typedef enum {
     SORT_NONE,
 
@@ -53,12 +55,19 @@ typedef struct {
 } Entry_s;
 
 typedef struct {
+    int entry_index;
+    struct Entry_List * in_list;
+} Entry_Index_s;
+
+typedef struct {
     Tex3DS_SubTexture subtex;
     u16 x, y;
 } Entry_Icon_s;
 
-typedef struct {
+typedef struct Entry_List {
     Entry_s * entries;
+    Entry_Index_s * entries_indexes; // indexed between [0, entries_count)
+
     int entries_count;
     int entries_capacity;
 
@@ -103,7 +112,23 @@ void list_init_capacity(Entry_List_s * list, const int init_capacity);
 // assumes list has been inited with a non zero capacity
 ssize_t list_add_entry(Entry_List_s * list);
 
-Entry_s * list_get_entry(Entry_List_s * list, int index);
-Entry_s * list_get_selected_entry(Entry_List_s * list);
+static inline Entry_s * list_get_entry_direct(const Entry_List_s * list, const Entry_Index_s * index)
+{
+    return &list->entries[index->entry_index];
+}
+static inline Entry_Index_s * list_get_entry_index(const Entry_List_s * list, int index)
+{
+    return &list->entries_indexes[index];
+}
+static inline Entry_s * list_get_entry(const Entry_List_s * list, int index)
+{
+    return list_get_entry_direct(list, list_get_entry_index(list, index));
+}
+static inline Entry_s * list_get_selected_entry(const Entry_List_s * list)
+{
+    return list_get_entry(list, list->selected_entry);
+}
+
+void list_free(Entry_List_s * list);
 
 #endif

@@ -73,30 +73,36 @@ static int compare_entries_base(const Entry_s * const a, const Entry_s * const b
 }
 
 typedef int (*sort_comparator)(const void *, const void *);
-static int compare_entries_by_name(const void * a, const void * b)
+static int compare_entries_by_name(const void * a_arg, const void * b_arg)
 {
-    const Entry_s * const entry_a = (const Entry_s *)a;
-    const Entry_s * const entry_b = (const Entry_s *)b;
+    const Entry_Index_s * a = (const Entry_Index_s *)a_arg;
+    const Entry_Index_s * b = (const Entry_Index_s *)b_arg;
+    const Entry_s * entry_a = &a->in_list->entries[a->entry_index];
+    const Entry_s * entry_b = &b->in_list->entries[b->entry_index];
     const int base = compare_entries_base(entry_a, entry_b);
     if(base)
         return base;
 
     return memcmp(entry_a->name, entry_b->name, 0x40 * sizeof(u16));
 }
-static int compare_entries_by_author(const void * a, const void * b)
+static int compare_entries_by_author(const void * a_arg, const void * b_arg)
 {
-    const Entry_s * const entry_a = (const Entry_s *)a;
-    const Entry_s * const entry_b = (const Entry_s *)b;
+    const Entry_Index_s * a = (const Entry_Index_s *)a_arg;
+    const Entry_Index_s * b = (const Entry_Index_s *)b_arg;
+    const Entry_s * entry_a = &a->in_list->entries[a->entry_index];
+    const Entry_s * entry_b = &b->in_list->entries[b->entry_index];
     const int base = compare_entries_base(entry_a, entry_b);
     if(base)
         return base;
 
     return memcmp(entry_a->author, entry_b->author, 0x40 * sizeof(u16));
 }
-static int compare_entries_by_filename(const void * a, const void * b)
+static int compare_entries_by_filename(const void * a_arg, const void * b_arg)
 {
-    const Entry_s * const entry_a = (const Entry_s *)a;
-    const Entry_s * const entry_b = (const Entry_s *)b;
+    const Entry_Index_s * a = (const Entry_Index_s *)a_arg;
+    const Entry_Index_s * b = (const Entry_Index_s *)b_arg;
+    const Entry_s * entry_a = &a->in_list->entries[a->entry_index];
+    const Entry_s * entry_b = &b->in_list->entries[b->entry_index];
     const int base = compare_entries_base(entry_a, entry_b);
     if(base)
         return base;
@@ -106,24 +112,41 @@ static int compare_entries_by_filename(const void * a, const void * b)
 
 static void sort_list(Entry_List_s * list, sort_comparator compare_entries)
 {
-    if(list->entries != NULL && list->entries != NULL)
-        qsort(list->entries, list->entries_count, sizeof(Entry_s), compare_entries); //alphabet sort
+    if(list->entries != NULL && list->entries_indexes != NULL)
+        qsort(list->entries_indexes, list->entries_count, sizeof(Entry_Index_s), compare_entries);
+}
+
+static sort_comparator sort_get_comparator(const Entry_List_s * list)
+{
+    switch(list->current_sort)
+    {
+    case SORT_NAME: return compare_entries_by_name;
+    case SORT_AUTHOR: return compare_entries_by_author;
+    case SORT_PATH: return compare_entries_by_filename;
+    default:
+        svcBreak(USERBREAK_ASSERT);
+        return NULL;
+    }
+}
+static void list_apply_sort(Entry_List_s * list)
+{
+    sort_list(list, sort_get_comparator(list));
 }
 
 void sort_by_name(Entry_List_s * list)
 {
-    sort_list(list, compare_entries_by_name);
     list->current_sort = SORT_NAME;
+    list_apply_sort(list);
 }
 void sort_by_author(Entry_List_s * list)
 {
-    sort_list(list, compare_entries_by_author);
     list->current_sort = SORT_AUTHOR;
+    list_apply_sort(list);
 }
 void sort_by_filename(Entry_List_s * list)
 {
-    sort_list(list, compare_entries_by_filename);
     list->current_sort = SORT_PATH;
+    list_apply_sort(list);
 }
 
 #define LOADING_DIR_ENTRIES_COUNT 16
@@ -196,7 +219,9 @@ Result load_entries(const char * loading_path, Entry_List_s * list, const Instal
 
 void list_init_capacity(Entry_List_s * list, const int init_capacity)
 {
-    list->entries = malloc(init_capacity * sizeof(Entry_s));
+    list->entries = calloc(init_capacity, sizeof(Entry_s));
+    list->entries_indexes = calloc(init_capacity, sizeof(Entry_Index_s));
+    list->entries_count = 0;
     list->entries_capacity = init_capacity;
 }
 
@@ -222,19 +247,45 @@ ssize_t list_add_entry(Entry_List_s * list)
         {
             return -1;
         }
-
         list->entries = new_list;
+        memset(new_list + list->entries_capacity, 0, (next_capacity - list->entries_capacity) * sizeof(Entry_s));
+
+        Entry_Index_s * const new_index_list = realloc(list->entries_indexes, next_capacity * sizeof(Entry_Index_s));
+        if(new_index_list == NULL)
+        {
+            return -2;
+        }
+        list->entries_indexes = new_index_list;
+        memset(new_index_list + list->entries_capacity, 0, (next_capacity - list->entries_capacity) * sizeof(Entry_s));
+
         list->entries_capacity = next_capacity;
     }
 
+    Entry_Index_s * const current_index = &list->entries_indexes[list->entries_count];
+    current_index->entry_index = list->entries_count;
+    current_index->in_list = list;
     return list->entries_count++;
 }
 
-Entry_s * list_get_entry(Entry_List_s * list, int index)
+void list_free(Entry_List_s * list)
 {
-    return &list->entries[index];
-}
-Entry_s * list_get_selected_entry(Entry_List_s * list)
-{
-    return list_get_entry(list, list->selected_entry);
+    free(list->entries);
+    free(list->entries_indexes);
+    list->entries = NULL;
+    list->entries_indexes = NULL;
+    list->entries_count = 0;
+    list->entries_capacity = 0;
+    
+    list->loading_path = NULL;
+    list->current_sort = SORT_NAME;
+    list->shuffle_count = 0;
+    list->selected_entry = 0;
+    list->scroll = 0;
+    list->previous_selected = 0;
+    list->previous_scroll = 0;
+    
+    free(list->tp_search);
+    list->tp_search = NULL;
+    list->tp_current_page = 0;
+    list->tp_page_count = 0;
 }

@@ -160,7 +160,7 @@ void free_lists(void)
         Entry_List_s * const current_list = &lists[i];
         C3D_TexDelete(&current_list->icons_texture);
         free(current_list->icons_info);
-        free(current_list->entries);
+        list_free(current_list);
         memset(current_list, 0, sizeof(Entry_List_s));
     }
     exit_thread();

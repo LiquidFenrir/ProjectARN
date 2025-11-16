@@ -46,18 +46,6 @@ static Result install_theme_internal(const Entry_List_s * themes, int installmod
 
     if(installmode & THEME_INSTALL_SHUFFLE)
     {
-        if(themes->shuffle_count < 2)
-        {
-            DEBUG("not enough themes selected for shuffle\n");
-            return MAKERESULT(RL_USAGE, RS_INVALIDARG, RM_COMMON, RD_INVALID_SELECTION);
-        }
-
-        if(themes->shuffle_count > MAX_SHUFFLE_THEMES)
-        {
-            DEBUG("too many themes selected for shuffle\n");
-            return MAKERESULT(RL_USAGE, RS_INVALIDARG, RM_COMMON, RD_INVALID_SELECTION);
-        }
-
         char * padded = NULL;
 
         int shuffle_count = 0;
@@ -312,33 +300,75 @@ static Result install_theme_internal(const Entry_List_s * themes, int installmod
 Result theme_install(Entry_s * theme)
 {
     Entry_List_s list = {0};
+    Entry_Index_s index = {0};
+
     list.entries_count = 1;
     list.entries = theme;
+    list.entries_indexes = &index;
     list.selected_entry = 0;
+
     return install_theme_internal(&list, THEME_INSTALL_BODY | THEME_INSTALL_BGM);
 }
 
 Result bgm_install(Entry_s * theme)
 {
     Entry_List_s list = {0};
+    Entry_Index_s index = {0};
+
     list.entries_count = 1;
     list.entries = theme;
+    list.entries_indexes = &index;
     list.selected_entry = 0;
+
     return install_theme_internal(&list, THEME_INSTALL_BGM);
 }
 
 Result no_bgm_install(Entry_s * theme)
 {
     Entry_List_s list = {0};
+    Entry_Index_s index = {0};
+
     list.entries_count = 1;
     list.entries = theme;
+    list.entries_indexes = &index;
     list.selected_entry = 0;
+
     return install_theme_internal(&list, THEME_INSTALL_BODY);
 }
 
 Result shuffle_install(const Entry_List_s * themes)
 {
-    return install_theme_internal(themes, THEME_INSTALL_SHUFFLE | THEME_INSTALL_BODY | THEME_INSTALL_BGM);
+    if(themes->shuffle_count < 2)
+    {
+        DEBUG("not enough themes selected for shuffle\n");
+        return MAKERESULT(RL_USAGE, RS_INVALIDARG, RM_COMMON, RD_INVALID_SELECTION);
+    }
+    else if(themes->shuffle_count > MAX_SHUFFLE_THEMES)
+    {
+        DEBUG("too many themes selected for shuffle\n");
+        return MAKERESULT(RL_USAGE, RS_INVALIDARG, RM_COMMON, RD_INVALID_SELECTION);
+    }
+
+    Entry_List_s list = {0};
+    Entry_Index_s indices[MAX_SHUFFLE_THEMES] = {0};
+
+    list.entries_count = 0;
+    list.entries = themes->entries;
+    list.entries_indexes = indices;
+    list.selected_entry = 0;
+
+    for(int i = 0; i < themes->entries_count && list.entries_count < themes->shuffle_count; i++)
+    {
+        const Entry_Index_s * current_index = list_get_entry_index(themes, i);
+        const Entry_s * current_theme = list_get_entry_direct(themes, current_index);
+
+        if(current_theme->in_shuffle)
+        {
+            indices[list.entries_count++].entry_index = current_index->entry_index;
+        }
+    }
+
+    return install_theme_internal(&list, THEME_INSTALL_SHUFFLE | THEME_INSTALL_BODY | THEME_INSTALL_BGM);
 }
 
 static SwkbdCallbackResult

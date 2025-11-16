@@ -792,8 +792,7 @@ bool themeplaza_browser(RemoteMode mode)
     free_preview(preview);
 
     free_icons(current_list);
-    free(current_list->entries);
-    free(current_list->tp_search);
+    list_free(current_list);
     free(last_search);
 
     return downloaded;
